@@ -1,48 +1,38 @@
 #define _POSIX_C_SOURCE 200112L
 
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  struct addrinfo hints, *res, *p;
-  int status;
-  char ipstr[INET6_ADDRSTRLEN];
+  struct sockaddr_in dest;
+  char req[] = "Test";
 
   if (argc != 2) {
     printf("\nUsage: %s <domain name>\n", argv[0]);
     return 0;
   }
 
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
-    return 2;
+  memset(&dest, 0, sizeof(dest));
+  dest.sin_family = AF_INET;
+  dest.sin_port = htons(53);
+  inet_pton(AF_INET, "1.1.1.1", &dest.sin_addr);
+
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    perror("Socket creation failed");
+    return 1;
   }
 
-  for (p = res; p != NULL; p = p->ai_next) {
-    void *addr;
-    char *ipver;
-
-    if (p->ai_family == AF_INET) {
-      struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-      addr = &(ipv4->sin_addr);
-      ipver = "IPv4";
-    } else {
-      struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-      addr = &(ipv6->sin6_addr);
-      ipver = "IPv6";
-    }
-
-    inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
-    printf("> %s: [%s] %s\n", argv[1], ipver, ipstr);
+  if (sendto(sock, req, sizeof(req), 0, (struct sockaddr *)&dest,
+             sizeof(dest)) < 0) {
+    perror("Sendto failed");
+    return 1;
   }
-  freeaddrinfo(res);
 
+  close(sock);
   return 0;
 }
