@@ -1,0 +1,21 @@
+# Build & Bin
+*.o
+*.a
+*.so
+dns_cli
+
+# Nix & Direnv
+.direnv/
+result
+result-*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System Files
+.DS_Store
+Thumbs.db
