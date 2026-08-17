@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#define HEX_LINE_LENGTH 12
+
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
 
@@ -85,10 +87,10 @@ int main(int argc, char *argv[]) {
 void print_hex(uint8_t buffer[], ssize_t bytes_received) {
   for (ssize_t i = 0; i < bytes_received; i++) {
     printf("%02X ", (unsigned char)buffer[i]);
-    if ((i + 1) % 12 == 0 && i != 0)
+    if ((i + 1) % HEX_LINE_LENGTH == 0 && i != 0)
       printf("\n");
   }
-  if (bytes_received % 12 != 0)
+  if (bytes_received % HEX_LINE_LENGTH != 0)
     printf("\n");
 }
 
