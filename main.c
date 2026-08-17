@@ -85,8 +85,11 @@ int main(int argc, char *argv[]) {
 void print_hex(uint8_t buffer[], ssize_t bytes_received) {
   for (ssize_t i = 0; i < bytes_received; i++) {
     printf("%02X ", (unsigned char)buffer[i]);
+    if ((i + 1) % 12 == 0 && i != 0)
+      printf("\n");
   }
-  printf("\n");
+  if (bytes_received % 12 != 0)
+    printf("\n");
 }
 
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos) {
