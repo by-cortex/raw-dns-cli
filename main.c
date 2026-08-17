@@ -6,14 +6,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos);
+void print_hex(uint8_t buffer[], ssize_t bytes_received);
 
 int main(int argc, char *argv[]) {
   struct sockaddr_in dest;
   uint8_t buffer[512] = {0};
   unsigned int pos = 0;
+
+  struct sockaddr_storage recv;
+  unsigned int recv_len = sizeof(recv);
 
   buffer[pos++] = 0x67;
   buffer[pos++] = 0x67;
@@ -53,8 +58,35 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  // RECV
+
+  memset(&recv, 0, sizeof(recv));
+  ssize_t bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
+                                    (struct sockaddr *)&recv, &recv_len);
+
+  if (recv.ss_family == AF_INET) {
+    struct sockaddr_in *ipv4 = (struct sockaddr_in *)&recv;
+    char ip_str[INET_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &ipv4->sin_addr, ip_str, sizeof(ip_str));
+  } else {
+    struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&recv;
+    char ip_str[INET6_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &ipv6->sin6_addr, ip_str, sizeof(ip_str));
+  }
+
+  print_hex(buffer, bytes_received);
+
   close(sock);
   return 0;
+}
+
+void print_hex(uint8_t buffer[], ssize_t bytes_received) {
+  for (ssize_t i = 0; i < bytes_received; i++) {
+    printf("%02X ", (unsigned char)buffer[i]);
+  }
+  printf("\n");
 }
 
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos) {
