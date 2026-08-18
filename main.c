@@ -2,6 +2,7 @@
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,6 +14,21 @@
 
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
+void parse_recv(uint8_t buffer[]);
+
+struct dns_record {
+  uint16_t name;
+  uint16_t type;
+  uint16_t class;
+  uint32_t ttl;
+  uint16_t rdlen;
+
+  union {
+    struct in_addr v4;
+    struct in6_addr v6;
+    uint8_t raw[16];
+  } rdata;
+};
 
 int main(int argc, char *argv[]) {
   struct sockaddr_in dest;
@@ -79,9 +95,55 @@ int main(int argc, char *argv[]) {
   }
 
   print_hex(buffer, bytes_received);
+  parse_recv(buffer);
 
   close(sock);
   return 0;
+}
+
+void parse_recv(uint8_t buffer[]) {
+  size_t offset = 6; // ANCOUNT index
+  uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
+  struct dns_record rec;
+  char ip_str[INET6_ADDRSTRLEN];
+  offset = 12; // headers end index
+
+  while (buffer[offset] != 0x00) {
+    offset += buffer[offset] + 1;
+  }
+  offset++;
+
+  offset += 4;
+
+  for (int i = 0; i < ancount; i++) {
+    rec.name = (buffer[offset] << 8) | buffer[offset + 1];
+    if ((buffer[offset] & 0xC0) == 0xC0) // TODO: skip name if not pointer
+      offset += 2;
+
+    rec.type = (buffer[offset] << 8) | buffer[offset + 1];
+    offset += 2;
+    rec.class = (buffer[offset] << 8) | buffer[offset + 1];
+    offset += 2;
+
+    memcpy(&rec.ttl, &buffer[offset], 4);
+    rec.ttl = htonl(rec.ttl);
+    offset += 4;
+
+    rec.rdlen = (buffer[offset] << 8) | buffer[offset + 1];
+    offset += 2;
+
+    memcpy(&rec.rdata.raw, &buffer[offset], rec.rdlen);
+    offset += rec.rdlen;
+
+    if (rec.type == 1 && rec.rdlen == 4) {
+      inet_ntop(AF_INET, &rec.rdata.v4, ip_str, sizeof(ip_str));
+    } else if (rec.type == 28 && rec.rdlen == 16) {
+      inet_ntop(AF_INET6, &rec.rdata.v6, ip_str, sizeof(ip_str));
+    }
+
+    printf("name: %d type: %d class: %d ttl: %d rdlen: %d\nIP: %s\n", rec.name,
+           rec.type, rec.class, rec.ttl, rec.rdlen, ip_str);
+  }
 }
 
 void print_hex(uint8_t buffer[], ssize_t bytes_received) {
