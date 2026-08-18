@@ -12,8 +12,9 @@
 
 #define HEX_LINE_LENGTH 12
 
-int write_domain(uint8_t buffer[], char domain[], unsigned int pos);
+int write_domain(uint8_t buffer[], char domain[], size_t pos);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
+int dns_request(uint8_t buffer[], char domain[], char dns_ip[]);
 void parse_recv(uint8_t buffer[]);
 void skip_name(uint8_t buffer[], size_t *offset);
 
@@ -32,10 +33,7 @@ struct dns_record {
 };
 
 int main(int argc, char *argv[]) {
-  struct sockaddr_in dest;
   uint8_t buffer[512] = {0};
-  unsigned int pos = 0;
-
   struct sockaddr_storage recv;
   unsigned int recv_len = sizeof(recv);
 
@@ -43,6 +41,23 @@ int main(int argc, char *argv[]) {
     printf("\nUsage: %s <domain name>\n", argv[0]);
     return 0;
   }
+
+  int sock = dns_request(buffer, argv[1], "1.1.1.1");
+
+  memset(&recv, 0, sizeof(recv));
+  ssize_t bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
+                                    (struct sockaddr *)&recv, &recv_len);
+
+  print_hex(buffer, bytes_received);
+  parse_recv(buffer);
+
+  close(sock);
+  return 0;
+}
+
+int dns_request(uint8_t buffer[], char domain[], char dns_ip[]) {
+  struct sockaddr_in dest;
+  size_t pos = 0;
 
   buffer[pos++] = 0x67;
   buffer[pos++] = 0x67;
@@ -53,7 +68,7 @@ int main(int argc, char *argv[]) {
   buffer[pos++] = 0x01;
 
   pos = 12;
-  pos = write_domain(buffer, argv[1], pos);
+  pos = write_domain(buffer, domain, pos);
 
   pos++;
   buffer[pos++] = 0x01;
@@ -63,7 +78,7 @@ int main(int argc, char *argv[]) {
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
   dest.sin_port = htons(53);
-  inet_pton(AF_INET, "1.1.1.1", &dest.sin_addr);
+  inet_pton(AF_INET, dns_ip, &dest.sin_addr);
 
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
@@ -77,17 +92,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // RECV
-
-  memset(&recv, 0, sizeof(recv));
-  ssize_t bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
-                                    (struct sockaddr *)&recv, &recv_len);
-
-  print_hex(buffer, bytes_received);
-  parse_recv(buffer);
-
-  close(sock);
-  return 0;
+  return sock;
 }
 
 void parse_recv(uint8_t buffer[]) {
@@ -152,7 +157,7 @@ void print_hex(uint8_t buffer[], ssize_t bytes_received) {
     printf("\n");
 }
 
-int write_domain(uint8_t buffer[], char domain[], unsigned int pos) {
+int write_domain(uint8_t buffer[], char domain[], size_t pos) {
   unsigned int char_len = 0;
   unsigned int tmp = pos;
 
