@@ -15,6 +15,7 @@
 int write_domain(uint8_t buffer[], char domain[], unsigned int pos);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
 void parse_recv(uint8_t buffer[]);
+void skip_name(uint8_t buffer[], size_t *offset);
 
 struct dns_record {
   uint16_t name;
@@ -96,17 +97,13 @@ void parse_recv(uint8_t buffer[]) {
   char ip_str[INET6_ADDRSTRLEN];
   offset = 12; // headers end index
 
-  while (buffer[offset] != 0x00) {
-    offset += buffer[offset] + 1;
-  }
-  offset++;
+  skip_name(buffer, &offset);
 
   offset += 4;
 
   for (int i = 0; i < ancount; i++) {
     rec.name = (buffer[offset] << 8) | buffer[offset + 1];
-    if ((buffer[offset] & 0xC0) == 0xC0) // TODO: skip name if not pointer
-      offset += 2;
+    skip_name(buffer, &offset);
 
     rec.type = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
@@ -132,6 +129,17 @@ void parse_recv(uint8_t buffer[]) {
     printf("name: %d type: %d class: %d ttl: %d rdlen: %d\nIP: %s\n", rec.name,
            rec.type, rec.class, rec.ttl, rec.rdlen, ip_str);
   }
+}
+
+void skip_name(uint8_t buffer[], size_t *offset) {
+  while (buffer[*offset] != 0x00) {
+    if ((buffer[*offset] & 0xC0) == 0xC0) {
+      *offset += 2;
+      return;
+    }
+    *offset += buffer[*offset] + 1;
+  }
+  *offset += 1;
 }
 
 void print_hex(uint8_t buffer[], ssize_t bytes_received) {
