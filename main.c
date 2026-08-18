@@ -38,6 +38,11 @@ int main(int argc, char *argv[]) {
   struct sockaddr_storage recv;
   unsigned int recv_len = sizeof(recv);
 
+  if (argc != 2) {
+    printf("\nUsage: %s <domain name>\n", argv[0]);
+    return 0;
+  }
+
   buffer[pos++] = 0x67;
   buffer[pos++] = 0x67;
 
@@ -47,17 +52,12 @@ int main(int argc, char *argv[]) {
   buffer[pos++] = 0x01;
 
   pos = 12;
-  pos = write_domain(buffer, "google.com", pos);
+  pos = write_domain(buffer, argv[1], pos);
 
   buffer[pos++] = 0x00;
   buffer[pos++] = 0x01;
   buffer[pos++] = 0x00;
   buffer[pos++] = 0x01;
-
-  if (argc != 2) {
-    printf("\nUsage: %s <domain name>\n", argv[0]);
-    return 0;
-  }
 
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
