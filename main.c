@@ -15,7 +15,7 @@
 int write_domain(uint8_t buffer[], char domain[], size_t pos);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
 int dns_request(uint8_t buffer[], char domain[], char dns_ip[]);
-void parse_recv(uint8_t buffer[]);
+int parse_recv(uint8_t buffer[]);
 void skip_name(uint8_t buffer[], size_t *offset);
 
 struct dns_record {
@@ -49,7 +49,10 @@ int main(int argc, char *argv[]) {
                                     (struct sockaddr *)&recv, &recv_len);
 
   print_hex(buffer, bytes_received);
-  parse_recv(buffer);
+  printf("\n");
+  if (parse_recv(buffer) <= 0) {
+    printf("Domain name not found!\n");
+  }
 
   close(sock);
   return 0;
@@ -95,12 +98,13 @@ int dns_request(uint8_t buffer[], char domain[], char dns_ip[]) {
   return sock;
 }
 
-void parse_recv(uint8_t buffer[]) {
-  size_t offset = 6; // ANCOUNT index
-  uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
+int parse_recv(uint8_t buffer[]) {
+  size_t offset = 6;
   struct dns_record rec;
   char ip_str[INET6_ADDRSTRLEN];
-  offset = 12; // headers end index
+  uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
+
+  offset = 12;
 
   skip_name(buffer, &offset);
 
@@ -134,6 +138,8 @@ void parse_recv(uint8_t buffer[]) {
     printf("name: %d type: %d class: %d ttl: %d rdlen: %d\nIP: %s\n", rec.name,
            rec.type, rec.class, rec.ttl, rec.rdlen, ip_str);
   }
+
+  return ancount;
 }
 
 void skip_name(uint8_t buffer[], size_t *offset) {
