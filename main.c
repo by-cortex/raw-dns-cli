@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   pos = 12;
   pos = write_domain(buffer, argv[1], pos);
 
-  buffer[pos++] = 0x00;
+  pos++;
   buffer[pos++] = 0x01;
   buffer[pos++] = 0x00;
   buffer[pos++] = 0x01;
@@ -81,18 +81,6 @@ int main(int argc, char *argv[]) {
   memset(&recv, 0, sizeof(recv));
   ssize_t bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
                                     (struct sockaddr *)&recv, &recv_len);
-
-  if (recv.ss_family == AF_INET) {
-    struct sockaddr_in *ipv4 = (struct sockaddr_in *)&recv;
-    char ip_str[INET_ADDRSTRLEN];
-
-    inet_ntop(AF_INET, &ipv4->sin_addr, ip_str, sizeof(ip_str));
-  } else {
-    struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&recv;
-    char ip_str[INET6_ADDRSTRLEN];
-
-    inet_ntop(AF_INET, &ipv6->sin6_addr, ip_str, sizeof(ip_str));
-  }
 
   print_hex(buffer, bytes_received);
   parse_recv(buffer);
