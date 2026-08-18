@@ -13,10 +13,16 @@
 #define HEX_LINE_LENGTH 12
 
 int write_domain(uint8_t buffer[], char domain[], size_t pos);
+void read_domain_pointer(uint8_t buffer[], uint16_t ptr, char out_str[]);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
 int dns_request(uint8_t buffer[], char domain[], char dns_ip[]);
 int parse_recv(uint8_t buffer[]);
 void skip_name(uint8_t buffer[], size_t *offset);
+
+void print_table_header(void);
+void print_table_row(const char *domain, const char *type, int ttl,
+                     const char *ip);
+void print_table_footer(void);
 
 struct dns_record {
   uint16_t name;
@@ -110,6 +116,7 @@ int parse_recv(uint8_t buffer[]) {
 
   offset += 4;
 
+  print_table_header();
   for (int i = 0; i < ancount; i++) {
     rec.name = (buffer[offset] << 8) | buffer[offset + 1];
     skip_name(buffer, &offset);
@@ -135,9 +142,17 @@ int parse_recv(uint8_t buffer[]) {
       inet_ntop(AF_INET6, &rec.rdata.v6, ip_str, sizeof(ip_str));
     }
 
-    printf("name: %d type: %d class: %d ttl: %d rdlen: %d\nIP: %s\n", rec.name,
-           rec.type, rec.class, rec.ttl, rec.rdlen, ip_str);
+    char domain_str[256];
+    read_domain_pointer(buffer, rec.name, domain_str);
+
+    char type_str[5];
+    if (rec.type == 1)
+      strcpy(type_str, "A");
+    else if (rec.type == 28)
+      strcpy(type_str, "AAAA");
+    print_table_row(domain_str, type_str, rec.ttl, ip_str);
   }
+  print_table_footer();
 
   return ancount;
 }
@@ -182,4 +197,43 @@ int write_domain(uint8_t buffer[], char domain[], size_t pos) {
   buffer[tmp] = char_len;
   buffer[pos++] = 0x00;
   return pos;
+}
+
+void read_domain_pointer(uint8_t buffer[], uint16_t ptr, char out_str[]) {
+  int curr_ptr = 0;
+  int len = 0;
+
+  uint16_t ptr_offset = ptr & 0x3FFF;
+  int src_ptr = ptr_offset;
+
+  while (buffer[src_ptr] != 0x00) {
+    len = buffer[src_ptr];
+
+    if (curr_ptr != 0)
+      out_str[curr_ptr++] = '.';
+
+    src_ptr++;
+
+    for (int i = 0; i < len; i++) {
+      out_str[curr_ptr++] = buffer[src_ptr++];
+    }
+  }
+  out_str[curr_ptr] = '\0';
+}
+
+void print_table_header(void) {
+  printf("┌─────────────────┬──────┬────────┬─────────────────┐\n");
+  printf("│ %-15s │ %-4s │ %-6s │ %-15s │\n", "DOMAIN", "TYPE", "TTL", "VALUE");
+  printf("├─────────────────┼──────┼────────┼─────────────────┤\n");
+}
+
+void print_table_row(const char *domain, const char *type, int ttl,
+                     const char *ip) {
+  char ttl_str[10];
+  snprintf(ttl_str, sizeof(ttl_str), "%ds", ttl);
+  printf("│ %-15s │ %-4s │ %-6s │ %-15s │\n", domain, type, ttl_str, ip);
+}
+
+void print_table_footer(void) {
+  printf("└─────────────────┴──────┴────────┴─────────────────┘\n");
 }
