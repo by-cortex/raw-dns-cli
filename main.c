@@ -12,10 +12,18 @@
 
 #define HEX_LINE_LENGTH 12
 
-int write_domain(uint8_t buffer[], char domain[], size_t pos);
+#define TRANSACTION_ID 0x6767
+#define FLAGS 0x0100
+#define HEADER_OFFSET 12
+#define QTYPE 0x0001
+#define QCLASS 0x0001
+
+#define PORT 53
+
+int write_domain(uint8_t buffer[], const char domain[], size_t pos);
 void read_domain_pointer(uint8_t buffer[], uint16_t ptr, char out_str[]);
 void print_hex(uint8_t buffer[], ssize_t bytes_received);
-int dns_request(uint8_t buffer[], char domain[], char dns_ip[]);
+int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]);
 int parse_recv(uint8_t buffer[]);
 void skip_name(uint8_t buffer[], size_t *offset);
 
@@ -48,7 +56,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  int sock = dns_request(buffer, argv[1], "1.1.1.1");
+  int sock = send_query(buffer, argv[1], "1.1.1.1");
 
   memset(&recv, 0, sizeof(recv));
   ssize_t bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
@@ -64,41 +72,44 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-int dns_request(uint8_t buffer[], char domain[], char dns_ip[]) {
+int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   struct sockaddr_in dest;
   size_t pos = 0;
 
-  buffer[pos++] = 0x67;
-  buffer[pos++] = 0x67;
+  uint16_t id = htons(TRANSACTION_ID);
+  memcpy(&buffer[0], &id, 2);
 
-  buffer[pos++] = 0x01;
-  pos++;
-  buffer[pos++] = 0x00;
-  buffer[pos++] = 0x01;
+  uint16_t flags = htons(FLAGS);
+  memcpy(&buffer[2], &flags, 2);
 
-  pos = 12;
-  pos = write_domain(buffer, domain, pos);
+  uint16_t qdcount = htons(1);
+  memcpy(&buffer[4], &qdcount, 2);
 
-  pos++;
-  buffer[pos++] = 0x01;
-  buffer[pos++] = 0x00;
-  buffer[pos++] = 0x01;
+  pos = write_domain(buffer, domain, HEADER_OFFSET);
+
+  uint16_t qtype = htons(QTYPE);
+  memcpy(&buffer[pos], &qtype, 2);
+  pos += 2;
+
+  uint16_t qclass = htons(QCLASS);
+  memcpy(&buffer[pos], &qclass, 2);
+  pos += 2;
 
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
-  dest.sin_port = htons(53);
+  dest.sin_port = htons(PORT);
   inet_pton(AF_INET, dns_ip, &dest.sin_addr);
 
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
     perror("Socket creation failed");
-    return 1;
+    return -1;
   }
 
   if (sendto(sock, buffer, pos, 0, (struct sockaddr *)&dest, sizeof(dest)) <
       0) {
     perror("Sendto failed");
-    return 1;
+    return -1;
   }
 
   return sock;
@@ -178,7 +189,7 @@ void print_hex(uint8_t buffer[], ssize_t bytes_received) {
     printf("\n");
 }
 
-int write_domain(uint8_t buffer[], char domain[], size_t pos) {
+int write_domain(uint8_t buffer[], const char domain[], size_t pos) {
   unsigned int char_len = 0;
   unsigned int tmp = pos;
 
