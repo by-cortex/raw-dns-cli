@@ -28,5 +28,8 @@ run: $(TARGET)
 valgrind: $(TARGET)
 	valgrind --leak-check=full --track-origins=yes ./$(TARGET) google.com
 
+compiledb: clean
+	bear -- make all
+
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)

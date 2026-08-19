@@ -19,3 +19,9 @@ result-*
 # System Files
 .DS_Store
 Thumbs.db
+
+# LSP / Tooling
+.cache/
+.clangd/
+build/
+compile_commands.json

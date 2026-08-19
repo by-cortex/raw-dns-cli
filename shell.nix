@@ -5,6 +5,7 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
     gnumake
+    bear
     gdb
     valgrind
     bind # dig

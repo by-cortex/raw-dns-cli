@@ -1,5 +1,7 @@
 #define _POSIX_C_SOURCE 200112L
 
+#include "table_print.h"
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stddef.h>
@@ -230,21 +232,4 @@ void read_domain_pointer(uint8_t buffer[], uint16_t ptr, char out_str[]) {
     }
   }
   out_str[curr_ptr] = '\0';
-}
-
-void print_table_header(void) {
-  printf("┌─────────────────┬──────┬────────┬─────────────────┐\n");
-  printf("│ %-15s │ %-4s │ %-6s │ %-15s │\n", "DOMAIN", "TYPE", "TTL", "VALUE");
-  printf("├─────────────────┼──────┼────────┼─────────────────┤\n");
-}
-
-void print_table_row(const char *domain, const char *type, int ttl,
-                     const char *ip) {
-  char ttl_str[10];
-  snprintf(ttl_str, sizeof(ttl_str), "%ds", ttl);
-  printf("│ %-15s │ %-4s │ %-6s │ %-15s │\n", domain, type, ttl_str, ip);
-}
-
-void print_table_footer(void) {
-  printf("└─────────────────┴──────┴────────┴─────────────────┘\n");
 }
