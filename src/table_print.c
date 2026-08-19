@@ -1,3 +1,5 @@
+#include "table_print.h"
+
 #include <stdio.h>
 
 void print_table_header(void) {
@@ -15,4 +17,14 @@ void print_table_row(const char *domain, const char *type, int ttl,
 
 void print_table_footer(void) {
   printf("└─────────────────┴──────┴────────┴─────────────────┘\n");
+}
+
+void print_hex(uint8_t buffer[], ssize_t bytes_received) {
+  for (ssize_t i = 0; i < bytes_received; i++) {
+    printf("%02X ", (unsigned char)buffer[i]);
+    if ((i + 1) % HEX_LINE_LENGTH == 0 && i != 0)
+      printf("\n");
+  }
+  if (bytes_received % HEX_LINE_LENGTH != 0)
+    printf("\n");
 }
