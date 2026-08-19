@@ -7,12 +7,13 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 
 int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   struct sockaddr_in dest;
   size_t pos = 0;
 
-  uint16_t id = htons(TRANSACTION_ID);
+  uint16_t id = ntohl(TRANSACTION_ID);
   memcpy(&buffer[0], &id, 2);
 
   uint16_t flags = htons(FLAGS);
@@ -51,11 +52,18 @@ int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   return sock;
 }
 
-int parse_recv(uint8_t buffer[]) {
+int parse_recv(uint8_t buffer[], ssize_t bytes_received) { // TODO: need fix
   size_t offset = 6;
   struct dns_record rec;
   char ip_str[INET6_ADDRSTRLEN];
+  char type_str[10] = "OTHER";
+  char domain_str[256];
   uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
+
+  if (bytes_received < 12) {
+    fprintf(stderr, "Error: Packet too short\n");
+    return -1;
+  }
 
   offset = 12;
 
@@ -80,26 +88,29 @@ int parse_recv(uint8_t buffer[]) {
     rec.rdlen = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
 
-    memcpy(&rec.rdata.raw, &buffer[offset], rec.rdlen);
+    memcpy(&rec.rdata.raw, &buffer[offset], sizeof(rec.rdata.raw));
     offset += rec.rdlen;
 
     if (rec.type == 1 && rec.rdlen == 4) {
       inet_ntop(AF_INET, &rec.rdata.v4, ip_str, sizeof(ip_str));
+      strcpy(type_str, "A");
     } else if (rec.type == 28 && rec.rdlen == 16) {
       inet_ntop(AF_INET6, &rec.rdata.v6, ip_str, sizeof(ip_str));
+      strcpy(type_str, "AAAA");
+    } else if (rec.type == 5) {
+      strcpy(type_str, "CNAME");
     }
 
-    char domain_str[256];
     read_domain_with_pointer(buffer, domain_str, rec.name);
 
-    char type_str[5];
-    if (rec.type == 1)
-      strcpy(type_str, "A");
-    else if (rec.type == 28)
-      strcpy(type_str, "AAAA");
     print_table_row(domain_str, type_str, rec.ttl, ip_str);
   }
   print_table_footer();
+
+  if (offset > (size_t)bytes_received) {
+    fprintf(stderr, "Error: Out of bytes_received in parsing module\n");
+    return -1;
+  }
 
   return ancount;
 }

@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #define TRANSACTION_ID 0x6767
 #define FLAGS 0x0100
@@ -27,6 +28,6 @@ struct dns_record {
 };
 
 int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]);
-int parse_recv(uint8_t buffer[]);
+int parse_recv(uint8_t buffer[], ssize_t bytes_received);
 
 #endif // NETWORK_H

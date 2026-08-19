@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   print_hex(buffer, bytes_received);
   printf("\n");
 
-  if (parse_recv(buffer) <= 0) {
+  if (parse_recv(buffer, bytes_received) <= 0) {
     printf("Domain name not found!\n");
   }
 
