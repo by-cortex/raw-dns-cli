@@ -9,6 +9,8 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   struct sockaddr_in dest;
   size_t pos = 0;
@@ -52,18 +54,17 @@ int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   return sock;
 }
 
-int parse_recv(uint8_t buffer[], ssize_t bytes_received) { // TODO: need fix
+int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
   size_t offset = 6;
   struct dns_record rec;
-  char ip_str[INET6_ADDRSTRLEN];
-  char type_str[10] = "OTHER";
   char domain_str[256];
-  uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
 
   if (bytes_received < 12) {
     fprintf(stderr, "Error: Packet too short\n");
     return -1;
   }
+
+  uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
 
   offset = 12;
 
@@ -73,8 +74,14 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) { // TODO: need fix
 
   print_table_header();
   for (int i = 0; i < ancount; i++) {
+    char ip_str[INET6_ADDRSTRLEN] = "-";
+    char type_str[10] = "OTHER";
+
     rec.name = (buffer[offset] << 8) | buffer[offset + 1];
     skip_name(buffer, &offset);
+
+    if (offset + 10 > (size_t)bytes_received)
+      break;
 
     rec.type = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
@@ -82,13 +89,15 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) { // TODO: need fix
     offset += 2;
 
     memcpy(&rec.ttl, &buffer[offset], 4);
-    rec.ttl = htonl(rec.ttl);
+    rec.ttl = ntohl(rec.ttl);
     offset += 4;
 
     rec.rdlen = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
+    if (offset + rec.rdlen > (size_t)bytes_received)
+      break;
 
-    memcpy(&rec.rdata.raw, &buffer[offset], sizeof(rec.rdata.raw));
+    memcpy(&rec.rdata.raw, &buffer[offset], MIN(rec.rdlen, 16));
     offset += rec.rdlen;
 
     if (rec.type == 1 && rec.rdlen == 4) {
