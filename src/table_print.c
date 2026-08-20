@@ -43,6 +43,7 @@ void print_table_footer(void) {
 }
 
 void print_hex(uint8_t buffer[], ssize_t bytes_received) {
+  printf("--- HEX DUMP ---\n");
   printf(COLOR_GRAY);
   for (ssize_t i = 0; i < bytes_received; i++) {
     printf("%02X ", (unsigned char)buffer[i]);
@@ -52,4 +53,19 @@ void print_hex(uint8_t buffer[], ssize_t bytes_received) {
   if (bytes_received % HEX_LINE_LENGTH != 0)
     printf("\n");
   printf(COLOR_RESET);
+  printf("----------------\n");
+}
+
+void print_help(const char *prog_name) {
+  fprintf(stderr,
+          "Usage: %s [OPTIONS] <domain> [dns-server-ip]\n\n"
+          "Options:\n"
+          "  -x, --hex     Print raw DNS packet hex dump\n"
+          "  -h, --help    Display this help message and exit\n\n"
+          "Defaults:\n"
+          "  dns-server-ip  1.1.1.1\n\n"
+          "Examples:\n"
+          "  %s google.com\n"
+          "  %s -x wikipedia.org 8.8.8.8\n",
+          prog_name, prog_name, prog_name);
 }
