@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -97,6 +98,7 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
     if (offset + rec.rdlen > (size_t)bytes_received)
       break;
 
+    size_t rdata_offset = offset;
     memcpy(&rec.rdata.raw, &buffer[offset], MIN(rec.rdlen, 16));
     offset += rec.rdlen;
 
@@ -107,6 +109,7 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
       inet_ntop(AF_INET6, &rec.rdata.v6, ip_str, sizeof(ip_str));
       strcpy(type_str, "AAAA");
     } else if (rec.type == 5) {
+      read_domain_with_pointer(buffer, ip_str, rdata_offset);
       strcpy(type_str, "CNAME");
     }
 

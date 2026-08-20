@@ -24,11 +24,21 @@ int write_domain_to_buffer(uint8_t buffer[], const char domain[], size_t ptr) {
 void read_domain_with_pointer(uint8_t buffer[], char out_str[], uint16_t ptr) {
   int curr_ptr = 0;
   int len = 0;
+  int jump_count = 0;
 
   uint16_t ptr_offset = ptr & 0x3FFF;
   int src_ptr = ptr_offset;
 
   while (buffer[src_ptr] != 0x00) {
+    if (jump_count > 10)
+      break;
+
+    if ((buffer[src_ptr] & 0xC0) == 0xC0) {
+      src_ptr = ((buffer[src_ptr] & 0x3F) << 8) | buffer[src_ptr + 1];
+      jump_count++;
+      continue;
+    }
+
     len = buffer[src_ptr];
 
     if (curr_ptr != 0)
