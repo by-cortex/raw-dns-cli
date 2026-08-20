@@ -56,12 +56,15 @@ make
 ## Screenshots
 
 ![Basic output](screenshots/basic.jpg)
+
 *Standard A record resolution for google.com*
 
 ![Hex dump](screenshots/hex.jpg)
+
 *Raw DNS packet hex dump with -x flag*
 
 ![Help output](screenshots/help.jpg)
+
 *Usage information with -h flag*
 
 ## Project Structure
