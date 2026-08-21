@@ -53,7 +53,7 @@ void read_domain_with_pointer(uint8_t buffer[], char out_str[], uint16_t ptr) {
   out_str[curr_ptr] = '\0';
 }
 
-void skip_name(uint8_t buffer[], size_t *offset) {
+void skip_domain_name(uint8_t buffer[], size_t *offset) {
   while (buffer[*offset] != 0x00) {
     if ((buffer[*offset] & 0xC0) == 0xC0) {
       *offset += 2;

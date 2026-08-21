@@ -6,6 +6,6 @@
 
 int write_domain_to_buffer(uint8_t buffer[], const char domain[], size_t ptr);
 void read_domain_with_pointer(uint8_t buffer[], char out_str[], uint16_t ptr);
-void skip_name(uint8_t buffer[], size_t *offset);
+void skip_domain_name(uint8_t buffer[], size_t *offset);
 
 #endif // DOMAIN_H

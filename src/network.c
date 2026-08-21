@@ -69,7 +69,7 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
 
   offset = 12;
 
-  skip_name(buffer, &offset);
+  skip_domain_name(buffer, &offset);
 
   offset += 4;
 
@@ -79,7 +79,7 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
     char type_str[10] = "OTHER";
 
     rec.name = (buffer[offset] << 8) | buffer[offset + 1];
-    skip_name(buffer, &offset);
+    skip_domain_name(buffer, &offset);
 
     if (offset + 10 > (size_t)bytes_received)
       break;
