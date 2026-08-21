@@ -66,6 +66,8 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
   }
 
   uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
+  if (ancount <= 0)
+    return 0;
 
   offset = 12;
 
