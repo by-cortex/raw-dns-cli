@@ -98,10 +98,10 @@ This project is licensed under the MIT License – see the [LICENSE](LICENSE) fi
 - [x] AAAA/CNAME record types
 - [x] Hex dump mode
 - [x] Color-coded output
+- [x] Socket timeout & retries (-t / --timeout)
 - [ ] EDNS support
 - [ ] TCP fallback for large responses
 - [ ] Async/non-blocking I/O
 - [ ] Additional record types (MX, TXT, SRV)
 - [ ] JSON output option (--json)
-- [ ] Socket timeout & retries (-t / --timeout)
 - [ ] Reverse DNS lookup (PTR records)
