@@ -12,7 +12,8 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
+int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
+               const char dns_ip[]) {
   struct sockaddr_in dest;
   size_t pos = 0;
 
@@ -40,19 +41,13 @@ int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]) {
   dest.sin_port = htons(PORT);
   inet_pton(AF_INET, dns_ip, &dest.sin_addr);
 
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    perror("Socket creation failed");
-    return -1;
-  }
-
   if (sendto(sock, buffer, pos, 0, (struct sockaddr *)&dest, sizeof(dest)) <
       0) {
     perror("Sendto failed");
     return -1;
   }
 
-  return sock;
+  return 0;
 }
 
 int parse_recv(uint8_t buffer[], ssize_t bytes_received) {

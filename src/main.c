@@ -61,29 +61,38 @@ int main(int argc, char *argv[]) {
     dns_ip = argv[optind + 1];
   }
 
-  ssize_t bytes_received = -1;
-
   struct timeval sock_timeout = {0};
   sock_timeout.tv_sec = timeout_sec;
+
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    perror("Socket creation failed");
+    return 1;
+  }
+
+  int sockopt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &sock_timeout,
+                           sizeof(sock_timeout));
+
+  if (sockopt < 0) {
+    perror("Error: Failed to set socket timeout");
+    close(sock);
+    return 1;
+  }
+  ssize_t bytes_received = -1;
 
   int max_attempts = 5;
 
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
 
-    int sock = send_query(buffer, domain, dns_ip);
-    if (sock < 0) {
+    int result = send_query(sock, buffer, domain, dns_ip);
+    if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
+      sleep(timeout_sec);
       continue;
     }
-    int sockopt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &sock_timeout,
-                             sizeof(sock_timeout));
 
-    if (sockopt < 0) {
-      perror("Error: Failed to set socket timeout");
-      close(sock);
-      return 1;
-    }
     memset(&recv, 0, sizeof(recv));
+    memset(buffer, 0, sizeof(buffer));
     recv_len = sizeof(recv);
 
     bytes_received = recvfrom(sock, buffer, sizeof(buffer), 0,
@@ -92,10 +101,10 @@ int main(int argc, char *argv[]) {
     if (bytes_received < 0) {
 
       fprintf(stderr, "Attempt %d/%d failed\n", attempt, max_attempts);
-      close(sock);
+
       if (attempt == max_attempts) {
         fprintf(stderr, "No response after %d attempts\n", attempt);
-
+        close(sock);
         return 1;
       }
 
@@ -111,8 +120,8 @@ int main(int argc, char *argv[]) {
       printf("Domain name not found!\n");
     }
 
-    close(sock);
     break;
   }
+  close(sock);
   return 0;
 }

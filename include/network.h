@@ -26,8 +26,7 @@ struct dns_record {
     uint8_t raw[16];
   } rdata;
 };
-
-int send_query(uint8_t buffer[], const char domain[], const char dns_ip[]);
+int send_query(uint32_t sock, uint8_t buffer[], const char domain[], const char dns_ip[]);
 int parse_recv(uint8_t buffer[], ssize_t bytes_received);
 
 #endif // NETWORK_H
