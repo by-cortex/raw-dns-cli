@@ -30,7 +30,7 @@ valgrind: $(TARGET)
 	valgrind --leak-check=full --track-origins=yes ./$(TARGET) google.com
 
 mock-server:
-	$(PYTHON) tests/mock_server.py
+	$(PYTHON) tests/mock_server.py $(ARGS)
 
 compiledb: clean
 	bear -- make all
