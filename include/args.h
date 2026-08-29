@@ -6,6 +6,7 @@ struct options {
   int timeout_sec;
   char *domain;
   char *dns_ip;
+  int port;
 };
 
 int check_args(int argc, char *argv[], struct options *out_options);

@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
   run_options.timeout_sec = 2;
   run_options.domain = NULL;
   run_options.dns_ip = "1.1.1.1";
+  run_options.port = 53;
 
   if (check_args(argc, argv, &run_options) == 1) {
     return 1;
@@ -33,8 +34,8 @@ int main(int argc, char *argv[]) {
   int sock = create_socket(sock_timeout);
 
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
-    int result =
-        send_query(sock, buffer, run_options.domain, run_options.dns_ip);
+    int result = send_query(sock, buffer, run_options.domain,
+                            run_options.dns_ip, run_options.port);
     if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
       sleep(run_options.timeout_sec);

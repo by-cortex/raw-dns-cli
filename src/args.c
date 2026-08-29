@@ -9,11 +9,12 @@ int check_args(int argc, char *argv[], struct options *out_options) {
       {"hex", no_argument, 0, 'x'},
       {"help", no_argument, 0, 'h'},
       {"timeout", required_argument, 0, 't'},
+      {"port", required_argument, 0, 'p'},
       {0, 0, 0, 0},
   };
 
   int opt;
-  while ((opt = getopt_long(argc, argv, "xht:", long_options, NULL)) != -1) {
+  while ((opt = getopt_long(argc, argv, "xhtp:", long_options, NULL)) != -1) {
     switch (opt) {
     case 'x':
       out_options->show_hex = 1;
@@ -23,6 +24,9 @@ int check_args(int argc, char *argv[], struct options *out_options) {
       return 1;
     case 't':
       out_options->timeout_sec = atoi(optarg);
+      break;
+    case 'p':
+      out_options->port = atoi(optarg);
       break;
     default:
       print_help(argv[0]);

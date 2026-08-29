@@ -12,8 +12,6 @@
 #define QTYPE 0x0001
 #define QCLASS 0x0001
 
-#define PORT 53
-
 struct dns_record {
   uint16_t name;
   uint16_t type;
@@ -30,7 +28,7 @@ struct dns_record {
 
 int create_socket(struct timeval sock_timeout);
 int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
-               const char dns_ip[]);
+               const char dns_ip[], int port);
 int parse_recv(uint8_t buffer[], ssize_t bytes_received);
 
 #endif // NETWORK_H

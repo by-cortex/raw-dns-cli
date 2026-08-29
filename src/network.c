@@ -32,7 +32,7 @@ int create_socket(struct timeval sock_timeout) {
 }
 
 int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
-               const char dns_ip[]) {
+               const char dns_ip[], int port) {
   struct sockaddr_in dest;
   size_t pos = 0;
 
@@ -57,7 +57,7 @@ int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
 
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
-  dest.sin_port = htons(PORT);
+  dest.sin_port = htons(port);
   inet_pton(AF_INET, dns_ip, &dest.sin_addr);
 
   if (sendto(sock, buffer, pos, 0, (struct sockaddr *)&dest, sizeof(dest)) <
