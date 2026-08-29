@@ -1,6 +1,6 @@
-#include "args.h"
 #define _POSIX_C_SOURCE 200112L
 
+#include "args.h"
 #include "network.h"
 #include "table_print.h"
 
@@ -49,7 +49,6 @@ int main(int argc, char *argv[]) {
                               (struct sockaddr *)&recv, &recv_len);
 
     if (bytes_received < 0) {
-
       fprintf(stderr, "Attempt %d/%d failed\n", attempt, max_attempts);
 
       if (attempt == max_attempts) {
@@ -57,7 +56,6 @@ int main(int argc, char *argv[]) {
         close(sock);
         return 1;
       }
-
       continue;
     }
 
@@ -69,9 +67,9 @@ int main(int argc, char *argv[]) {
     if (parse_recv(buffer, bytes_received) <= 0) {
       printf("Domain name not found!\n");
     }
-
     break;
   }
+
   close(sock);
   return 0;
 }

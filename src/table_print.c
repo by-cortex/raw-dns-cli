@@ -61,6 +61,7 @@ void print_help(const char *prog_name) {
           "Usage: %s [OPTIONS] <domain> [dns-server-ip]\n\n"
           "Options:\n"
           "  -x, --hex     Print raw DNS packet hex dump\n"
+          "  -t, --timeout Number of seconds in the retry interval\n"
           "  -h, --help    Display this help message and exit\n\n"
           "Defaults:\n"
           "  dns-server-ip  1.1.1.1\n\n"
