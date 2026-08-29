@@ -4,12 +4,13 @@ LDFLAGS   :=
 
 TARGET    := dns_cli
 SRC_DIR   := src
+PYTHON    := python3
 BUILD_DIR := build
 
 SRCS      := $(wildcard $(SRC_DIR)/*.c)
 OBJS      := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-.PHONY: all clean run valgrind
+.PHONY: all clean run valgrind mock-server compiledb
 
 all: $(TARGET)
 
@@ -27,6 +28,9 @@ run: $(TARGET)
 
 valgrind: $(TARGET)
 	valgrind --leak-check=full --track-origins=yes ./$(TARGET) google.com
+
+mock-server:
+	$(PYTHON) tests/mock_server.py
 
 compiledb: clean
 	bear -- make all
