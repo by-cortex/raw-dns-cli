@@ -26,7 +26,7 @@ def run_mock_server(port: int, mode: str) -> None:
             sock.sendto(responce, addr)
             continue
 
-        if mode == "nx-domain":
+        if mode == "nxdomain":
             responce = bytearray(data)
             responce[2] |= 0x80  # QR bit = 1 (Responce)
             responce[3] |= 0x03  # RCODE 3 (NXDOMAIN)
