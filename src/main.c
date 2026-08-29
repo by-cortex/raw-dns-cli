@@ -1,11 +1,10 @@
+#include "args.h"
 #define _POSIX_C_SOURCE 200112L
 
 #include "network.h"
 #include "table_print.h"
 
-#include <getopt.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -15,67 +14,30 @@ int main(int argc, char *argv[]) {
   uint8_t buffer[512] = {0};
   struct sockaddr_storage recv;
   socklen_t recv_len = sizeof(recv);
+  ssize_t bytes_received = -1;
 
-  int timeout_sec = 2;
-  int show_hex = 0;
-  const char *dns_ip = "1.1.1.1";
-  const char *domain = NULL;
+  struct options run_options;
+  run_options.show_hex = 0;
+  run_options.timeout_sec = 2;
+  run_options.domain = NULL;
+  run_options.dns_ip = "1.1.1.1";
 
-  static struct option long_options[] = {
-      {"hex", no_argument, 0, 'x'},
-      {"help", no_argument, 0, 'h'},
-      {"timeout", required_argument, 0, 't'},
-      {0, 0, 0, 0},
-  };
-
-  int opt;
-  while ((opt = getopt_long(argc, argv, "xht:", long_options, NULL)) != -1) {
-    switch (opt) {
-    case 'x':
-      show_hex = 1;
-      break;
-    case 'h':
-      print_help(argv[0]);
-      return 1;
-    case 't':
-      timeout_sec = atoi(optarg);
-      break;
-    default:
-      print_help(argv[0]);
-      return 1;
-    }
-  }
-
-  if (optind >= argc) {
-    fprintf(stderr, "Error: Domain name is required\n");
-    print_help(argv[0]);
+  if (check_args(argc, argv, &run_options) == 1) {
     return 1;
-  }
-  if (timeout_sec <= 0) {
-    fprintf(stderr, "Error: -t argument must be greater than 0\n");
-    return 1;
-  }
-  domain = argv[optind];
-
-  if (optind + 1 < argc) {
-    dns_ip = argv[optind + 1];
   }
 
   struct timeval sock_timeout = {0};
-  sock_timeout.tv_sec = timeout_sec;
+  sock_timeout.tv_sec = run_options.timeout_sec;
+  int max_attempts = 5;
 
   int sock = create_socket(sock_timeout);
 
-  ssize_t bytes_received = -1;
-
-  int max_attempts = 5;
-
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
-
-    int result = send_query(sock, buffer, domain, dns_ip);
+    int result =
+        send_query(sock, buffer, run_options.domain, run_options.dns_ip);
     if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
-      sleep(timeout_sec);
+      sleep(run_options.timeout_sec);
       continue;
     }
 
@@ -99,7 +61,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
-    if (show_hex == 1) {
+    if (run_options.show_hex == 1) {
       print_hex(buffer, bytes_received);
       printf("\n");
     }
