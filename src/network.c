@@ -12,6 +12,25 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+int create_socket(struct timeval sock_timeout) {
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    perror("Socket creation failed");
+    return 1;
+  }
+
+  int sockopt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &sock_timeout,
+                           sizeof(sock_timeout));
+
+  if (sockopt < 0) {
+    perror("Error: Failed to set socket timeout");
+    close(sock);
+    return 1;
+  }
+
+  return sock;
+}
+
 int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
                const char dns_ip[]) {
   struct sockaddr_in dest;

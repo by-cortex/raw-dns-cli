@@ -64,20 +64,8 @@ int main(int argc, char *argv[]) {
   struct timeval sock_timeout = {0};
   sock_timeout.tv_sec = timeout_sec;
 
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    perror("Socket creation failed");
-    return 1;
-  }
+  int sock = create_socket(sock_timeout);
 
-  int sockopt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &sock_timeout,
-                           sizeof(sock_timeout));
-
-  if (sockopt < 0) {
-    perror("Error: Failed to set socket timeout");
-    close(sock);
-    return 1;
-  }
   ssize_t bytes_received = -1;
 
   int max_attempts = 5;

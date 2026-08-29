@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 #include <stdint.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 #define TRANSACTION_ID 0x6767
@@ -26,7 +27,10 @@ struct dns_record {
     uint8_t raw[16];
   } rdata;
 };
-int send_query(uint32_t sock, uint8_t buffer[], const char domain[], const char dns_ip[]);
+
+int create_socket(struct timeval sock_timeout);
+int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
+               const char dns_ip[]);
 int parse_recv(uint8_t buffer[], ssize_t bytes_received);
 
 #endif // NETWORK_H
