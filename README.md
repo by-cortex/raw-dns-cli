@@ -20,7 +20,7 @@ A minimal DNS CLI tool for educational purposes. Look up DNS records from the co
 
 ```bash
 # Clone the repository
-git clone https://github.com/df1gg/raw-dns-cli.git
+git clone https://github.com/by-cortex/raw-dns-cli.git
 cd raw-dns-cli
 
 # Build with make
@@ -52,6 +52,37 @@ make
 # Show help
 ./dns_cli -h
 ```
+## Testing
+
+The project includes a Python mock DNS server (`tests/mock_server.py`) to test network timeouts, retry logic, and edge cases locally without external network dependencies.
+
+### 1. Run the mock server (Terminal 1)
+
+```bash
+# Standard mock server (listens on 127.0.0.1:5353)
+make mock-server
+
+# Or run with specific test modes
+python3 tests/mock_server.py --mode drop-twice --port 5353
+# Or:
+make mock-server ARGS="--mode drop-twice"
+
+```
+
+Available mock modes:
+
+* `normal` – Returns a valid DNS answer (`1.2.3.4`)
+* `drop-twice` – Drops the first 2 incoming packets to test retry/timeout logic
+* `bad-id` – Corrupts the Transaction ID to test packet validation
+* `nxdomain` – Returns an `NXDOMAIN` (RCODE 3) error response
+
+### 2. Test the CLI (Terminal 2)
+
+```bash
+# Query the local mock server
+./dns_cli -p 5353 example.com 127.0.0.1
+
+```
 
 ## Screenshots
 
@@ -71,15 +102,15 @@ make
 
 ```
 raw-dns-cli/
-├── include/         # Header files (domain.h, network.h, table_print.h)
-├── src/            # Source files (domain.c, main.c, network.c, table_print.c)
-├── Makefile        # Build automation
-├── .gitignore
-├── shell.nix       # Nix development environment
-└── README.md       # This file
+├── include/          # Header files (args.h, domain.h, network.h, table_print.h)
+├── src/              # Source code (args.c, domain.c, main.c, network.c, table_print.c)
+├── tests/            # Python DNS mock server for local testing
+├── screenshots/      # Example output images for documentation
+├── Makefile          # Build automation
+├── shell.nix         # Nix development environment
+├── LICENSE           # MIT License
+└── README.md         # Project documentation
 ```
-
-Generated files (`dns_cli`, `build/`) are excluded via `.gitignore`.
 
 ## How it works
 
