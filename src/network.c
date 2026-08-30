@@ -36,7 +36,7 @@ int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
   struct sockaddr_in dest;
   size_t pos = 0;
 
-  uint16_t id = ntohl(TRANSACTION_ID);
+uint16_t id = htons(TRANSACTION_ID);
   memcpy(&buffer[0], &id, 2);
 
   uint16_t flags = htons(FLAGS);
