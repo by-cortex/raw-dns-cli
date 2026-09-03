@@ -110,7 +110,7 @@ int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received) {
 
     rec.type = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
-    rec.class = (buffer[offset] << 8) | buffer[offset + 1];
+    // rec.class = (buffer[offset] << 8) | buffer[offset + 1];
     offset += 2;
 
     memcpy(&rec.ttl, &buffer[offset], 4);
