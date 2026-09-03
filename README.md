@@ -2,8 +2,9 @@
 
 A minimal DNS CLI tool for educational purposes. Look up DNS records from the command line with a clean table output, hex dump mode, and customizable DNS servers.
 
-![C Language](https://img.shields.io/badge/C-11-ff69b4?style=for-the-badge&logo=c)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/by-cortex/raw-dns-cli/ci.yml?style=flat-square&logo=github&label=build)](https://github.com/by-cortex/raw-dns-cli/actions)
+![C Language](https://img.shields.io/badge/C-11-ff69b4?style=flat-square&logo=c)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
 
 ## Features
 
