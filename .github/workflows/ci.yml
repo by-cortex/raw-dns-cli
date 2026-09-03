@@ -1,4 +1,4 @@
-name: CI / Build & Test
+name: CI
 
 on:
   push:
@@ -7,37 +7,50 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-and-test:
+  formatting:
+    name: Code Formatting (clang-format)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+      - name: Check formatting
+        run: clang-format --dry-run --Werror src/*.c include/*.h
 
-      - name: Install dependencies
+  static-analysis:
+    name: Static Analysis (cppcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: Run cppcheck
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc make python3 valgrind
+          cppcheck --enable=warning,style,performance,portability \
+                   --error-exitcode=1 \
+                   --inline-suppr \
+                   -I include/ src/
 
+  build-and-test:
+    name: Build, Test & Valgrind
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc make python3 valgrind
       - name: Build project
         run: make
-
       - name: Test CLI with Mock Server
         run: |
           python3 tests/mock_server.py --port 5353 &
-          SERVER_PID=$!
+          PID=$!
           sleep 1
-
           ./dns_cli -p 5353 example.com 127.0.0.1
-
-          kill $SERVER_PID
-
-      - name: Check for memory leaks (Valgrind)
+          kill $PID
+      - name: Memory leak check (Valgrind)
         run: |
           python3 tests/mock_server.py --port 5353 &
-          SERVER_PID=$!
+          PID=$!
           sleep 1
-
           valgrind --leak-check=full --error-exitcode=1 ./dns_cli -p 5353 example.com 127.0.0.1
-
-          kill $SERVER_PID
+          kill $PID
