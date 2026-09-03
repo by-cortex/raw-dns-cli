@@ -1,0 +1,43 @@
+name: CI / Build & Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make python3 valgrind
+
+      - name: Build project
+        run: make
+
+      - name: Test CLI with Mock Server
+        run: |
+          python3 tests/mock_server.py --port 5353 &
+          SERVER_PID=$!
+          sleep 1
+
+          ./dns_cli -p 5353 example.com 127.0.0.1
+
+          kill $SERVER_PID
+
+      - name: Check for memory leaks (Valgrind)
+        run: |
+          python3 tests/mock_server.py --port 5353 &
+          SERVER_PID=$!
+          sleep 1
+
+          valgrind --leak-check=full --error-exitcode=1 ./dns_cli -p 5353 example.com 127.0.0.1
+
+          kill $SERVER_PID
