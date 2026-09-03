@@ -5,16 +5,21 @@
 #include "table_print.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
+  uint16_t id = 0;
   uint8_t buffer[512] = {0};
   struct sockaddr_storage recv;
   socklen_t recv_len = sizeof(recv);
   ssize_t bytes_received = -1;
+
+  srand((unsigned int)time(NULL));
 
   struct options run_options;
   run_options.show_hex = 0;
@@ -34,7 +39,7 @@ int main(int argc, char *argv[]) {
   int sock = create_socket(sock_timeout);
 
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
-    int result = send_query(sock, buffer, run_options.domain,
+    int result = send_query(sock, &id, buffer, run_options.domain,
                             run_options.dns_ip, run_options.port);
     if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
@@ -65,7 +70,7 @@ int main(int argc, char *argv[]) {
       printf("\n");
     }
 
-    if (parse_recv(buffer, bytes_received) <= 0) {
+    if (parse_recv(id, buffer, bytes_received) <= 0) {
       printf("Domain name not found!\n");
     }
     break;

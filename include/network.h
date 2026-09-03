@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#define TRANSACTION_ID 0x6767
 #define FLAGS 0x0100
 #define HEADER_OFFSET 12
 #define QTYPE 0x0001
@@ -27,8 +26,9 @@ struct dns_record {
 };
 
 int create_socket(struct timeval sock_timeout);
-int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
-               const char dns_ip[], int port);
-int parse_recv(uint8_t buffer[], ssize_t bytes_received);
+int send_query(uint32_t sock, uint16_t *id, uint8_t buffer[],
+               const char domain[], const char dns_ip[], int port);
+int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received);
+uint16_t get_random_id(void);
 
 #endif // NETWORK_H

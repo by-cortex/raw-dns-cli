@@ -5,7 +5,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -31,13 +33,13 @@ int create_socket(struct timeval sock_timeout) {
   return sock;
 }
 
-int send_query(uint32_t sock, uint8_t buffer[], const char domain[],
-               const char dns_ip[], int port) {
+int send_query(uint32_t sock, uint16_t *id, uint8_t buffer[],
+               const char domain[], const char dns_ip[], int port) {
   struct sockaddr_in dest;
   size_t pos = 0;
 
-uint16_t id = htons(TRANSACTION_ID);
-  memcpy(&buffer[0], &id, 2);
+  *id = htons(get_random_id());
+  memcpy(&buffer[0], id, 2);
 
   uint16_t flags = htons(FLAGS);
   memcpy(&buffer[2], &flags, 2);
@@ -69,8 +71,8 @@ uint16_t id = htons(TRANSACTION_ID);
   return 0;
 }
 
-int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
-  size_t offset = 6;
+int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received) {
+  size_t offset = 0;
   struct dns_record rec;
   char domain_str[256];
 
@@ -78,6 +80,12 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
     fprintf(stderr, "Error: Packet too short\n");
     return -1;
   }
+
+  uint16_t answer_id = (buffer[offset] << 8) | buffer[offset + 1];
+  if (ntohs(answer_id) != query_id) {
+    return 0;
+  }
+  offset = 6;
 
   uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
   if (ancount <= 0)
@@ -141,4 +149,8 @@ int parse_recv(uint8_t buffer[], ssize_t bytes_received) {
   }
 
   return ancount;
+}
+
+uint16_t get_random_id(void) {
+  return (uint16_t)((rand() & 0xFF) | ((rand() & 0xFF) << 8));
 }
