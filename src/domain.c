@@ -21,7 +21,8 @@ int write_domain_to_buffer(uint8_t buffer[], const char domain[], size_t ptr) {
   return ptr;
 }
 
-void read_domain_with_pointer(uint8_t buffer[], char out_str[], uint16_t ptr) {
+void read_domain_with_pointer(const uint8_t buffer[], char out_str[],
+                              uint16_t ptr) {
   int curr_ptr = 0;
   int len = 0;
   int jump_count = 0;
@@ -53,7 +54,7 @@ void read_domain_with_pointer(uint8_t buffer[], char out_str[], uint16_t ptr) {
   out_str[curr_ptr] = '\0';
 }
 
-void skip_domain_name(uint8_t buffer[], size_t *offset) {
+void skip_domain_name(const uint8_t buffer[], size_t *offset) {
   while (buffer[*offset] != 0x00) {
     if ((buffer[*offset] & 0xC0) == 0xC0) {
       *offset += 2;

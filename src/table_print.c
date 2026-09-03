@@ -42,7 +42,7 @@ void print_table_footer(void) {
                     "──────────────┘\n" COLOR_RESET);
 }
 
-void print_hex(uint8_t buffer[], ssize_t bytes_received) {
+void print_hex(const uint8_t buffer[], ssize_t bytes_received) {
   printf("--- HEX DUMP ---\n");
   printf(COLOR_GRAY);
   for (ssize_t i = 0; i < bytes_received; i++) {

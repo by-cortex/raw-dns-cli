@@ -18,7 +18,7 @@ void print_table_header(void);
 void print_table_row(const char *domain, const char *type, int ttl,
                      const char *ip);
 void print_table_footer(void);
-void print_hex(uint8_t buffer[], ssize_t bytes_received);
+void print_hex(const uint8_t buffer[], ssize_t bytes_received);
 void print_help(const char *prog_name);
 
 #endif // TABLE_PRINT_H
