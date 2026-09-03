@@ -88,7 +88,7 @@ int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received) {
   offset = 6;
 
   uint16_t ancount = (buffer[offset] << 8) | buffer[offset + 1];
-  if (ancount <= 0)
+  if (ancount == 0)
     return 0;
 
   offset = 12;
