@@ -33,6 +33,25 @@ def run_mock_server(port: int, mode: str) -> None:
             sock.sendto(responce, addr)
             continue
 
+        if mode == "truncate":
+            responce = bytearray(data)
+            responce[2] |= 0x02 # TC flag bit
+            sock.sendto(responce, addr)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("127.0.0.1", port))
+                s.listen()
+                conn, tcp_addr = s.accept()
+                with conn:
+                    print(f"[MOCK TCP] Connected by {addr}")
+                    data = conn.recv(1024)
+                    tcp_responce = create_dns_responce(data)
+                    len_bytes = len(bytearray(tcp_responce)).to_bytes(2, byteorder="big")
+                    tcp_responce = bytearray(len_bytes) + tcp_responce
+                    conn.sendall(tcp_responce)
+                    conn.close()
+            continue
+
         responce = create_dns_responce(data)
         sock.sendto(responce, addr)
 
@@ -50,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", type=int, default=5353)
     parser.add_argument(
         "--mode",
-        choices=["normal", "drop-twice", "bad-id", "nxdomain"],
+        choices=["normal", "drop-twice", "bad-id", "nxdomain", "truncate"],
         default="normal",
     )
     args = parser.parse_args()
