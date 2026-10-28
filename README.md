@@ -8,12 +8,12 @@ A minimal DNS CLI tool for educational purposes. Look up DNS records from the co
 
 ## Features
 
-- 🔍 **A/AAAA/CNAME record resolution** – Look up IPv4, IPv6, and alias records
-- 📦 **Hex dump mode** (`-x`) – View raw DNS packets in hexadecimal format
-- 🌐 **Custom DNS server** – specify any resolver (default: 1.1.1.1)
-- 🎨 **Color-coded output** – Green for A records, blue for AAAA, yellow for CNAME
-- 📋 **Table formatting** – Pretty-printed results with unicode box-drawing characters
-- 🛠️ **Simple CLI** – `dns_cli domain [dns-server-ip]`
+- **A/AAAA/CNAME record resolution** – Look up IPv4, IPv6, and alias records
+- **Hex dump mode** (`-x`) – View raw DNS packets in hexadecimal format
+- **Custom DNS server** – specify any resolver (default: 1.1.1.1)
+- **Color-coded output** – Green for A records, blue for AAAA, yellow for CNAME
+- **Table formatting** – Pretty-printed results with unicode box-drawing characters
+- **Simple CLI** – `dns_cli domain [dns-server-ip]`
 
 ## Installation
 
