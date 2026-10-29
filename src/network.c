@@ -33,9 +33,12 @@ int create_socket(struct timeval sock_timeout) {
   return sock;
 }
 
-int send_query(uint32_t sock, uint16_t *id, uint8_t buffer[],
-               const char domain[], const char dns_ip[], int port) {
-  struct sockaddr_in dest;
+int serialize_message(uint16_t *id, uint8_t buffer[], size_t buffer_size,
+                      const char domain[]) {
+  if (buffer_size < 12) {
+    return -1;
+  }
+
   size_t pos = 0;
 
   *id = htons(get_random_id());
@@ -57,13 +60,19 @@ int send_query(uint32_t sock, uint16_t *id, uint8_t buffer[],
   memcpy(&buffer[pos], &qclass, 2);
   pos += 2;
 
+  return pos;
+}
+
+int send_query(uint32_t sock, uint8_t buffer[], size_t buffer_size,
+               const char dns_ip[], int port) {
+  struct sockaddr_in dest;
   memset(&dest, 0, sizeof(dest));
   dest.sin_family = AF_INET;
   dest.sin_port = htons(port);
   inet_pton(AF_INET, dns_ip, &dest.sin_addr);
 
-  if (sendto(sock, buffer, pos, 0, (struct sockaddr *)&dest, sizeof(dest)) <
-      0) {
+  if (sendto(sock, buffer, buffer_size, 0, (struct sockaddr *)&dest,
+             sizeof(dest)) < 0) {
     perror("Sendto failed");
     return -1;
   }

@@ -26,8 +26,10 @@ struct dns_record {
 };
 
 int create_socket(struct timeval sock_timeout);
-int send_query(uint32_t sock, uint16_t *id, uint8_t buffer[],
-               const char domain[], const char dns_ip[], int port);
+int serialize_message(uint16_t *id, uint8_t buffer[], size_t buffer_size,
+                      const char domain[]);
+int send_query(uint32_t sock, uint8_t buffer[], size_t buffer_size,
+               const char dns_ip[], int port);
 int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received);
 uint16_t get_random_id(void);
 

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #define _POSIX_C_SOURCE 200112L
 
 #include "args.h"
@@ -39,7 +40,10 @@ int main(int argc, char *argv[]) {
   int sock = create_socket(sock_timeout);
 
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
-    int result = send_query(sock, &id, buffer, run_options.domain,
+    uint8_t message_buffer[512] = {0};
+    serialize_message(&id, message_buffer, sizeof(message_buffer),
+                      run_options.domain);
+    int result = send_query(sock, message_buffer, sizeof(message_buffer),
                             run_options.dns_ip, run_options.port);
     if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
