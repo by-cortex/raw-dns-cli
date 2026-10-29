@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -78,6 +79,51 @@ int send_query(uint32_t sock, uint8_t buffer[], size_t buffer_size,
   }
 
   return 0;
+}
+
+int tcp_fallback(uint16_t query_id, const char dns_ip[], int port,
+                 uint8_t *buffer, size_t buffer_size) {
+  struct sockaddr_in dest;
+  memset(&dest, 0, sizeof(dest));
+  dest.sin_family = AF_INET;
+  dest.sin_port = htons(port);
+  inet_pton(AF_INET, dns_ip, &dest.sin_addr);
+
+  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (connect(sock_fd, (struct sockaddr *)&dest, sizeof(dest)) != 0) {
+    fprintf(stderr, "TCP Fallback failed to connect server\n");
+    return -1;
+  }
+
+  uint16_t net_len = htons((uint16_t)buffer_size);
+  if (send(sock_fd, &net_len, sizeof(net_len), 0) < 0) {
+    perror("Failed send len TCP segment");
+    close(sock_fd);
+    return -1;
+  }
+  if (send(sock_fd, buffer, buffer_size, 0) < 0) {
+    perror("Failed send len TCP segment");
+    close(sock_fd);
+    return -1;
+  }
+
+  uint16_t resp_len = 0;
+  recv(sock_fd, &resp_len, 2, MSG_WAITALL);
+  resp_len = ntohs(resp_len);
+
+  uint8_t recv_buffer[4096] = {0};
+  ssize_t bytes_received = recv(sock_fd, recv_buffer, resp_len, MSG_WAITALL);
+  if (bytes_received < 0) {
+    perror("Failed with recv TCP");
+    close(sock_fd);
+    return -1;
+  }
+  print_hex(recv_buffer, bytes_received);
+  parse_recv(query_id, recv_buffer, bytes_received);
+
+  close(sock_fd);
+  return bytes_received;
 }
 
 int parse_recv(uint16_t query_id, uint8_t buffer[], ssize_t bytes_received) {

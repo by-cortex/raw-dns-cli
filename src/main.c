@@ -41,9 +41,9 @@ int main(int argc, char *argv[]) {
 
   for (int attempt = 1; attempt <= max_attempts; attempt++) {
     uint8_t message_buffer[512] = {0};
-    serialize_message(&id, message_buffer, sizeof(message_buffer),
-                      run_options.domain);
-    int result = send_query(sock, message_buffer, sizeof(message_buffer),
+    int message_len = serialize_message(
+        &id, message_buffer, sizeof(message_buffer), run_options.domain);
+    int result = send_query(sock, message_buffer, message_len,
                             run_options.dns_ip, run_options.port);
     if (result < 0) {
       fprintf(stderr, "Error: Failed to send DNS query\n");
@@ -67,6 +67,12 @@ int main(int argc, char *argv[]) {
         return 1;
       }
       continue;
+    }
+
+    if (buffer[2] & 0x02) {
+      tcp_fallback(id, run_options.dns_ip, run_options.port, message_buffer,
+                   message_len);
+      break;
     }
 
     if (run_options.show_hex == 1) {

@@ -35,21 +35,27 @@ def run_mock_server(port: int, mode: str) -> None:
 
         if mode == "truncate":
             responce = bytearray(data)
+            responce[2] |= 0x80  # QR bit = 1 (Responce)
             responce[2] |= 0x02 # TC flag bit
             sock.sendto(responce, addr)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind(("127.0.0.1", port))
-                s.listen()
-                conn, tcp_addr = s.accept()
-                with conn:
-                    print(f"[MOCK TCP] Connected by {addr}")
-                    data = conn.recv(1024)
-                    tcp_responce = create_dns_responce(data)
-                    len_bytes = len(bytearray(tcp_responce)).to_bytes(2, byteorder="big")
-                    tcp_responce = bytearray(len_bytes) + tcp_responce
-                    conn.sendall(tcp_responce)
-                    conn.close()
+                s.listen(1)
+                s.settimeout(3.0)
+                try:
+                    conn, tcp_addr = s.accept()
+                    with conn:
+                        print(f"[MOCK TCP] Connected by {addr}")
+                        raw_data = conn.recv(1024)
+                        if len(raw_data) > 2:
+                            dns_query = raw_data[2:]
+                            dns_body = create_dns_responce(dns_query)
+                            len_prefix = len(dns_body).to_bytes(2, byteorder="big")
+                            conn.sendall(len_prefix + dns_body)
+                except socket.timeout:
+                    print("[MOCK TCP] Timed out waiting for TCP fallback connection")
+
             continue
 
         responce = create_dns_responce(data)
