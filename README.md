@@ -53,6 +53,7 @@ make
 # Show help
 ./dns_cli -h
 ```
+
 ## Testing
 
 The project includes a Python mock DNS server (`tests/mock_server.py`) to test network timeouts, retry logic, and edge cases locally without external network dependencies.
@@ -72,10 +73,10 @@ make mock-server ARGS="--mode drop-twice"
 
 Available mock modes:
 
-* `normal` – Returns a valid DNS answer (`1.2.3.4`)
-* `drop-twice` – Drops the first 2 incoming packets to test retry/timeout logic
-* `bad-id` – Corrupts the Transaction ID to test packet validation
-* `nxdomain` – Returns an `NXDOMAIN` (RCODE 3) error response
+- `normal` – Returns a valid DNS answer (`1.2.3.4`)
+- `drop-twice` – Drops the first 2 incoming packets to test retry/timeout logic
+- `bad-id` – Corrupts the Transaction ID to test packet validation
+- `nxdomain` – Returns an `NXDOMAIN` (RCODE 3) error response
 
 ### 2. Test the CLI (Terminal 2)
 
@@ -89,15 +90,15 @@ Available mock modes:
 
 ![Basic output](screenshots/basic.jpg)
 
-*Standard A record resolution for google.com*
+_Standard A record resolution for google.com_
 
 ![Hex dump](screenshots/hex.jpg)
 
-*Raw DNS packet hex dump with -x flag*
+_Raw DNS packet hex dump with -x flag_
 
 ![Help output](screenshots/help.jpg)
 
-*Usage information with -h flag*
+_Usage information with -h flag_
 
 ## Project Structure
 
@@ -132,7 +133,7 @@ This project is licensed under the MIT License – see the [LICENSE](LICENSE) fi
 - [x] Color-coded output
 - [x] Socket timeout & retries (-t / --timeout)
 - [ ] EDNS support
-- [ ] TCP fallback for large responses
+- [x] TCP fallback for large responses
 - [ ] Async/non-blocking I/O
 - [ ] Additional record types (MX, TXT, SRV)
 - [ ] JSON output option (--json)
